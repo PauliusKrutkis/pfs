@@ -1,7 +1,7 @@
-<?php /** @var \Pfs\Filters $filters */
+<?php /** @var \Pfs\Navigation $navigation */
 
-$filters = $this->get('filters');
-$query   = $filters->getQuery();
+$navigation = $this->get('navigation');
+$query      = $navigation->getQuery();
 
 $args = array(
     'base'      => str_replace($query->max_num_pages, '%#%', esc_url(get_pagenum_link($query->max_num_pages))),
@@ -19,5 +19,3 @@ $args = array(
 <div data-filter-group="page" data-pagination>
     <?php echo paginate_links($args); ?>
 </div>
-
-

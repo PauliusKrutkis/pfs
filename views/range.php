@@ -1,7 +1,7 @@
 <?php
 
 /** @var Pfs\View $this */
-/** @var Pfs\Filters $filters */
+/** @var Pfs\Navigation $filters */
 
 $meta    = $this->get('group');
 $options = $this->get('options');

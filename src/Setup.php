@@ -54,20 +54,20 @@ class Setup
 
     public function setupPageTemplate($template)
     {
-        /** @var Filters $layeredNavigation */
-        $instances = $this->getFilterInstances();
+        /** @var Navigation $layeredNavigation */
+        $instances = $this->getNavigations();
 
         if ( ! $instances) {
             return $template;
         }
 
         foreach ($instances as $layeredNavigation) {
-            if ( ! $layeredNavigation instanceof Filters) {
+            if ( ! $layeredNavigation instanceof Navigation) {
                 throw new \Exception("layered_navigation hook requires Layered_Navigation object(s)");
             }
 
-            if (is_page($layeredNavigation->getFilterPageId())) {
-                $view = new \Pfs\View('filter-page');
+            if (is_page($layeredNavigation->getPageId())) {
+                $view = new View('page');
 
                 return $view->getFilaPath();
             }
@@ -78,26 +78,28 @@ class Setup
 
     public function addRewrites()
     {
-        /** @var Filters $filters */
-        $instances = $this->getFilterInstances();
+        /** @var Navigation $navigations */
+        $navigations = $this->getNavigations();
 
-        if ( ! $instances) {
+        if ( ! $navigations) {
             return '';
         }
 
-        foreach ($instances as $filters) {
-            if ( ! $filters instanceof Filters) {
+        foreach ($navigations as $navigation) {
+            if ( ! $navigation instanceof Navigation) {
+                // TODO change message
                 throw new \Exception("layered_navigation hook requires Filters object(s)");
             }
 
-            $pageId      = $filters->getFilterPageId();
+            $pageId      = $navigation->getPageId();
             $pageSlug    = get_post($pageId)->post_name;
             $position    = 2;
             $rule        = sprintf('^%s', $pageSlug);
             $queryString = sprintf('index.php?page_id=%s', $pageId);
 
-            foreach ($filters->getGroups() as $key => $options) {
-                $filterSlug  = $filters->getFilterSlug($key);
+            /** @var Filter $filter */
+            foreach ($navigation->getFilters() as $filter) {
+                $filterSlug  = $filter->getSlug();
                 $rule        .= sprintf('(\/%s/([^/]*))?', $filterSlug);
                 $queryString .= sprintf('&%s=$matches[%s]', $filterSlug, $position);
                 $position    += 2;
@@ -112,53 +114,64 @@ class Setup
         }
     }
 
-    private function getFilterInstances()
+    private function getNavigations()
     {
-        $filtersArgs    = apply_filters('pfs_filters', null);
-        $filtersObjects = [];
+        $settings    = apply_filters('pfs_navigation', null);
+        $navigations = [];
 
-        foreach ($filtersArgs as $args) {
-            $filters = new Filters();
+        foreach ($settings as $setting) {
+            $navigation = new Navigation();
+            $filters    = [];
 
-            $filters->setPaged($args['paged']);
-            $filters->setFilterPageId($args['page']);
-            $filters->setQuery($args['base_query']);
+            $navigation->setPaged($setting['paged']);
+            $navigation->setPageId($setting['page']);
+            $navigation->setQuery($setting['query']);
 
-            foreach ($args['groups'] as $id => $group) {
-                switch ($group['type']) {
-                    case 'taxonomy':
-                        $filters->addTaxonomyFilter($id, $group);
-                        break;
-                    case 'meta':
-                        $filters->addMetaFilter($id, [
-                            'min' => $group['values'][0],
-                            'max' => $group['values'][1]
-                        ]);
-                        break;
+            foreach ($setting['filters'] as $arguments) {
+                $filter = new Filter($arguments['title'], $arguments['type'], $arguments['template']);
+
+                if (isset($arguments['slug'])) {
+                    $filter->setSlug($arguments['slug']);
                 }
+
+                if (isset($arguments['values'])) {
+                    $options = [];
+                    foreach ($arguments['values'] as $key => $value) {
+                        $option    = new Option($key, $value);
+                        $options[] = $option;
+                    }
+
+                    $filter->setOptions($options);
+                }
+
+                $filters[] = $filter;
             }
 
-            $filtersObjects[] = $filters;
+            $navigation->setFilters($filters);
+
+            $navigations[] = $navigation;
         }
 
-        if ( ! is_array($filtersObjects)) {
-            return [$filtersObjects];
+        if ( ! is_array($navigations)) {
+            return [$navigations];
         }
 
-        return $filtersObjects;
+        return $navigations;
     }
 
-    public function addActiveFilters($localize)
-    {
-        $instances = $this->getFilterInstances();
-        /** @var Filters $filters */
+    public
+    function addActiveFilters(
+        $localize
+    ) {
+        $instances = $this->getNavigations();
+        /** @var Navigation $filters */
 
         foreach ($instances as $filters) {
-            if (is_page($filters->getFilterPageId())) {
+            if (is_page($filters->getPageId())) {
                 $localize['scripts'] = [
                     'prefix'  => 'pfs',
                     'strings' => [
-                        'pageUrl'       => get_post($filters->getFilterPageId())->post_name,
+                        'pageUrl'       => get_post($filters->getPageId())->post_name,
                         'activeFilters' => $filters->getActiveFilters()
                     ]
                 ];
@@ -168,30 +181,32 @@ class Setup
         return $localize;
     }
 
-    public function loadFiltersInstance()
+    public
+    function loadNavigationInstance()
     {
-        $instances = $this->getFilterInstances();
+        $instances = $this->getNavigations();
 
         if ( ! $instances) {
             throw new \Exception("An error ocured while loading Layered_Navigation instance");
         }
 
-        /** @var Filters $filters */
-        foreach ($instances as $filters) {
-            if (is_page($filters->getFilterPageId())) {
-                return $filters;
+        /** @var Navigation $navigation */
+        foreach ($instances as $navigation) {
+            if (is_page($navigation->getPageId())) {
+                return $navigation;
             }
         }
 
         return '';
     }
 
-    private function addActions()
+    private
+    function addActions()
     {
         add_action('wp_enqueue_scripts', [$this, 'addAssets']);
         add_filter('template_include', [$this, 'setupPageTemplate'], 99);
         add_action('init', [$this, 'addRewrites']);
         add_filter('pfs_localize', [$this, 'addActiveFilters']);
-        add_filter('filters_instance', [$this, 'loadFiltersInstance']);
+        add_filter('navigation_instance', [$this, 'loadNavigationInstance']);
     }
 }
