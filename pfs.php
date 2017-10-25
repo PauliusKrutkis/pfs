@@ -19,24 +19,24 @@ function addPfsFilters($filters)
             'posts_per_page' => 10
         ],
         'filters' => [
-            'category' => [
-                'title'      => 'category',
-                'type'       => 'taxonomy',
-                'template'   => 'checkbox',
-                'hide_empty' => true,
-            ],
-            'post_tag' => [
-                'title'    => 'tags',
+            'category'   => [
+                'title'    => 'Category',
+                'type'     => 'taxonomy',
                 'template' => 'checkbox',
-                'type'     => 'taxonomy'
+                'taxonomy' => 'category'
             ],
-//            TODO meta type
-//            'popularity' => [
-//                'title'    => 'popularity',
-//                'template' => 'range',
-//                'type'     => 'meta',
-//                'values'   => [0, 100]
-//            ]
+            'post_tag'   => [
+                'title'    => 'Tags',
+                'type'     => 'taxonomy',
+                'template' => 'checkbox',
+                'taxonomy' => 'post_tag'
+            ],
+            'popularity' => [
+                'title'    => 'Popularity',
+                'template' => 'range',
+                'type'     => 'meta',
+                'values'   => [0, 100]
+            ]
         ]
     ];
 

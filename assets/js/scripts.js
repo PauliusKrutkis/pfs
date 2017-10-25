@@ -1,79 +1,15 @@
 'use strict';
 
-(function ($) {
-    var url = getBaseUrl();
-    var data = {};
-    var scrolled = false;
-    var trigger = '[data-filter-param]';
-    var filterGroup = '[data-filter-group]';
-    var filterContainer = '[data-filter-groups]';
-    var pagination = '[data-pagination] a';
+var $ = jQuery;
 
-    $(pagination).click(goToPage);
-    $(filterGroup).each(getData);
-    $(trigger).click(toggle);
-    noUiSliderInit('[data-no-ui-slider]');
+// Range
 
-    function goToPage(e) {
-        e.preventDefault();
-        var url = this.href;
-        var pageNr = url.match(/page\/(\d+)/)[1];
-
-        add('page', pageNr);
-    }
-
-    function getBaseUrl() {
-        if (true) {
-            return location.protocol + '//' + location.host + '/' + pfs.pageUrl;
-        } else {
-            return location.protocol + '//' + location.host + location.pathname + '?';
-        }
-    }
-
-    function noUiSliderInit(selector) {
-        $(selector).each(function () {
-            var $slider = $(this);
-            var options = $slider.data('no-ui-slider');
-
-            noUiSlider.create($slider[0], {
-                start: [options.activeFrom, options.activeTo],
-                connect: [false, true, false],
-                step: 1,
-                range: {
-                    'min': [options.min],
-                    'max': [options.max]
-                }
-            });
-
-            bindNoUiMinMax($slider);
-            bindNoUiChange($slider);
-        });
-    }
-
-    function bindNoUiChange($slider) {
-        var options = $slider.data('no-ui-slider');
-
-        $slider[0].noUiSlider.on('change', function (values) {
-            var filter = values.map(function (number) {
-                return Math.round(number)
-            }).join('-');
-
-            emptyGroup(options.meta);
-
-            if ((Math.round(values[0]) !== options.min) || (Math.round(values[1]) !== options.max)) {
-                add(options.meta, filter);
-            } else {
-                emptyGroupAndPush(options.meta);
-            }
-        });
-    }
-
-    function bindNoUiMinMax($slider) {
-        var options = $slider.data('no-ui-slider');
+var range = (function () {
+    function update(input, options) {
         var $from = $(options.from);
         var $to = $(options.to);
 
-        $slider[0].noUiSlider.on('update', function (values, handle) {
+        input.noUiSlider.on('update', function (values, handle) {
             if (handle) {
                 $to.text(Math.round(values[handle]));
             } else {
@@ -82,119 +18,131 @@
         });
     }
 
-    function scrollTofilters() {
-        if (!scrolled)
-            $(window).scrollTop($(filterContainer).offset().top);
-    }
+    function change(input, options) {
+        input.noUiSlider.on('change', function (values) {
+            var value = values.map(function (number) {
+                return Math.round(number)
+            }).join('-');
 
-    function getData() {
-        var group = $(this).data('filter-group');
-        var params = getUrlParameter(group);
-
-        if (typeof params !== "undefined") {
-            scrollTofilters();
-
-            switch (typeof params) {
-                case 'string':
-                    params = params.split(',');
-                    break;
-                case 'number':
-                    params = [params];
-                    break;
-            }
-
-            data[group] = params;
-        } else {
-            data[group] = [];
-        }
-    }
-
-    function push() {
-        window.location.href = generateUrl();
-    }
-
-    function generateUrl() {
-        var count = 0;
-        for (var key in data) {
-            if (data[key].length > 0) {
-                var group;
-                if (true) {
-                    group = '/' + key + '/';
-                } else {
-                    group = '&' + key + '=';
-                }
-                for (var subkey in data[key]) {
-                    if (subkey != 0) {
-                        group += ',';
-                    }
-                    group += data[key][subkey];
-                }
-                url += group;
-                count++;
-            }
-        }
-
-        if (count === 0) {
-            url = url.replace('?', '');
-        }
-
-        return url;
-    }
-
-    function getUrlParameter(sParam) {
-        var filterValue = pfs.activeFilters[sParam];
-
-        if (filterValue !== undefined) {
-            var values = pfs.activeFilters[sParam];
-
-            if (Array.isArray(values)) {
-                return values.join(',');
+            if ((Math.round(values[0]) !== options.min) || (Math.round(values[1]) !== options.max)) {
+                store.change(options.slug, value);
             } else {
-                return values;
+                store.empty(options.slug);
             }
-        }
+        });
     }
 
-    function toggle() {
-        var element = $(this).data('slug').toString();
-        var group = $(this).closest(filterGroup).data('filter-group');
+    return {
+        update: update,
+        change: change
+    }
+})();
 
-        if (filterExist(group, element)) {
-            $(this).removeClass('active');
-            remove(group, element);
+// Store
+
+var store = (function () {
+
+    var data = [];
+
+    function add(slug, value) {
+        var filter = find(slug);
+
+        if (filter) {
+            filter.values.push(value);
         } else {
-            $(this).addClass('active');
-            add(group, element);
+            filter = {
+                slug: slug,
+                values: []
+            };
+
+            filter.values.push(value);
+            data.push(filter);
         }
     }
 
-    function filterExist(group, filter) {
-        return $.inArray(filter, data[group]) >= 0;
+    function change(slug, value) {
+        var filter = find(slug);
+
+        if (filter) {
+            filter.values = [];
+            filter.values.push(value);
+        } else {
+            filter = {
+                slug: slug,
+                values: []
+            };
+
+            filter.values.push(value);
+            data.push(filter);
+        }
     }
 
-    function add(group, filter) {
-        emptyGroup('page');
-        data[group].push(filter);
-        push();
-    }
+    function remove(slug, value) {
+        var filter = find(slug);
 
-    function emptyGroup(group) {
-        data[group] = [];
-    }
-
-    function emptyGroupAndPush(group) {
-        data[group] = [];
-        push();
-    }
-
-    function remove(group, filter) {
-        for (var key in data[group]) {
-            if (data[group][key] === filter) {
-                data[group].splice(key, 1);
+        if (filter) {
+            var index = filter.values.indexOf(value);
+            if (index > -1) {
+                filter.values.splice(index, 1);
             }
+        } else {
+            return '';
         }
-
-        push();
     }
 
-})(jQuery);
+    function empty(slug) {
+        var filter = find(slug);
+
+        if (filter) {
+            filter.values = [];
+        } else {
+            return '';
+        }
+    }
+
+    function find(slug) {
+        return data.find(function (filter) {
+            return filter.slug === slug;
+        });
+    }
+
+    return {
+        add: add,
+        change: change,
+        remove: remove,
+        empty: empty,
+        data: data
+    }
+
+})();
+
+// Bind events
+
+$('[data-pfs-checkbox]').click(function () {
+    var data = $(this).data('pfs-checkbox');
+
+    if (this.checked) {
+        store.add(data.slug, data.value);
+    } else {
+        store.remove(data.slug, data.value);
+    }
+});
+
+$('[data-pfs-range]').each(function () {
+    var options = $(this).data('pfs-range');
+
+    noUiSlider.create(this, {
+        start: [options.activeFrom, options.activeTo],
+        connect: [false, true, false],
+        step: 1,
+        range: {
+            'min': [options.min],
+            'max': [options.max]
+        }
+    });
+
+    range.update(this, options);
+    range.change(this, options);
+});
+
+

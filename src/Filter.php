@@ -11,6 +11,7 @@ class Filter
     private $slug = '';
     private $type = '';
     private $template = '';
+    private $taxonomy = '';
 
     public function __construct($name, $type, $template)
     {
@@ -89,9 +90,37 @@ class Filter
 
     public function getHtml()
     {
-        $view = new View($this->template);
+        $view = new View('types/' . $this->template);
         $view->set('filter', $this);
 
         $view->output();
+    }
+
+    /**
+     * @param string $taxonomy
+     *
+     * @return Filter
+     */
+    public function setTaxonomy($taxonomy)
+    {
+        $this->taxonomy = $taxonomy;
+        $terms          = get_terms($taxonomy);
+        $options        = [];
+
+        foreach ($terms as $term) {
+            $options[] = new Option($term->name, $term->slug);
+        }
+
+        $this->setOptions($options);
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTaxonomy()
+    {
+        return $this->taxonomy;
     }
 }

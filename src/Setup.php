@@ -134,6 +134,10 @@ class Setup
                     $filter->setSlug($arguments['slug']);
                 }
 
+                if (isset($arguments['taxonomy'])) {
+                    $filter->setTaxonomy($arguments['taxonomy']);
+                }
+
                 if (isset($arguments['values'])) {
                     $options = [];
                     foreach ($arguments['values'] as $key => $value) {
