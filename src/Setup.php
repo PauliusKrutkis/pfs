@@ -122,6 +122,7 @@ class Setup
         foreach ($settings as $setting) {
             $navigation = new Navigation();
             $filters    = [];
+            $order      = 0;
 
             $navigation->setPaged($setting['paged']);
             $navigation->setPageId($setting['page']);
@@ -129,6 +130,7 @@ class Setup
 
             foreach ($setting['filters'] as $arguments) {
                 $filter = new Filter($arguments['title'], $arguments['type'], $arguments['template']);
+                $filter->setOrder($order);
 
                 if (isset($arguments['slug'])) {
                     $filter->setSlug($arguments['slug']);
@@ -149,6 +151,7 @@ class Setup
                 }
 
                 $filters[] = $filter;
+                $order++;
             }
 
             $navigation->setFilters($filters);

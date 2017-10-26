@@ -13,9 +13,12 @@ $filter = $this->get('filter');
                 ?>
                 <li>
                     <input type="checkbox"
+                        <?php if ($filter->isOptionActive($option))
+                            echo 'checked' ?>
                            data-pfs-checkbox='{
-                           "slug": "<?php echo $filter->getSlug() ?>",
-                           "value": "<?php echo $option->getValue() ?>"
+                               "slug": "<?php echo $filter->getSlug() ?>",
+                               "order": <?php echo $filter->getOrder() ?>,
+                               "value": "<?php echo $option->getValue() ?>"
                            }'
                            id="<?php echo $id ?>"
                            name="<?php echo $filter->getSlug() ?>"

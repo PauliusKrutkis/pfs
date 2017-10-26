@@ -15,7 +15,7 @@ $args = array(
 );
 
 ?>
-
-<div data-filter-group="page" data-pagination>
+<!--TODO add js events -->
+<div>
     <?php echo paginate_links($args); ?>
 </div>

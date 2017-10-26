@@ -25,9 +25,10 @@ var range = (function () {
             }).join('-');
 
             if ((Math.round(values[0]) !== options.min) || (Math.round(values[1]) !== options.max)) {
-                store.change(options.slug, value);
+                options.value = value;
+                store.change(options);
             } else {
-                store.empty(options.slug);
+                store.empty(options);
             }
         });
     }
@@ -42,66 +43,64 @@ var range = (function () {
 
 var store = (function () {
 
-    var data = [];
+    var filters = [];
 
-    function add(slug, value) {
-        var filter = find(slug);
+    function add(data) {
+        var filter = find(data.slug);
 
         if (filter) {
-            filter.values.push(value);
+            filter.values.push(data.value);
         } else {
-            filter = {
-                slug: slug,
-                values: []
-            };
-
-            filter.values.push(value);
-            data.push(filter);
+            filter = new Filter(data);
+            filter.values.push(data.value);
+            filters.push(filter);
         }
+
+        url.change(filters);
     }
 
-    function change(slug, value) {
-        var filter = find(slug);
+    function change(data) {
+        var filter = find(data.slug);
 
         if (filter) {
             filter.values = [];
-            filter.values.push(value);
+            filter.values.push(data.value);
         } else {
-            filter = {
-                slug: slug,
-                values: []
-            };
-
-            filter.values.push(value);
-            data.push(filter);
+            filter = new Filter(data);
+            filter.values.push(data.value);
+            filters.push(filter);
         }
+
+        url.change(filters);
     }
 
-    function remove(slug, value) {
-        var filter = find(slug);
+    function remove(data) {
+        var filter = find(data.slug);
 
         if (filter) {
-            var index = filter.values.indexOf(value);
+            var index = filter.values.indexOf(data.value);
             if (index > -1) {
                 filter.values.splice(index, 1);
             }
         } else {
             return '';
         }
+
+        url.change(filters);
     }
 
-    function empty(slug) {
-        var filter = find(slug);
+    function empty(data) {
+        var filter = find(data.slug);
 
         if (filter) {
             filter.values = [];
-        } else {
-            return '';
         }
+
+        url.change(filters);
     }
 
     function find(slug) {
-        return data.find(function (filter) {
+        return filters.find(function (filter) {
             return filter.slug === slug;
         });
     }
@@ -110,11 +109,61 @@ var store = (function () {
         add: add,
         change: change,
         remove: remove,
-        empty: empty,
-        data: data
+        empty: empty
     }
 
 })();
+
+// Url
+
+var url = (function () {
+
+    function generate(data) {
+        var url = '';
+
+        data = order(data);
+
+        data.map(function (filter) {
+            url += filter.slug;
+            url += '/';
+            url += filter.values.join(',');
+            url += '/';
+        });
+
+        // remove last slash
+        url = url.slice(0, -1);
+
+        return url;
+    }
+
+    function change(data) {
+        var page = $('[data-pfs]').data('pfs');
+        var url = generate(data);
+
+        window.location.href = page + url;
+    }
+
+    function order(data) {
+        data.sort(function (a, b) {
+            return a.order > b.order;
+        });
+
+        return data;
+    }
+
+    return {
+        change: change
+    }
+
+})();
+
+// Filter model
+
+var Filter = function (data) {
+    this.slug = data.slug;
+    this.order = data.order;
+    this.values = [];
+};
 
 // Bind events
 
@@ -122,9 +171,9 @@ $('[data-pfs-checkbox]').click(function () {
     var data = $(this).data('pfs-checkbox');
 
     if (this.checked) {
-        store.add(data.slug, data.value);
+        store.add(data);
     } else {
-        store.remove(data.slug, data.value);
+        store.remove(data);
     }
 });
 

@@ -12,6 +12,7 @@ class Filter
     private $type = '';
     private $template = '';
     private $taxonomy = '';
+    private $order = 0;
 
     public function __construct($name, $type, $template)
     {
@@ -122,5 +123,57 @@ class Filter
     public function getTaxonomy()
     {
         return $this->taxonomy;
+    }
+
+    /**
+     * @param int $order
+     *
+     * @return Filter
+     */
+    public function setOrder($order)
+    {
+        $this->order = $order;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrder()
+    {
+        return $this->order;
+    }
+
+    public function isOptionActive(Option $option)
+    {
+        $queryVar = get_query_var($this->getSlug());
+        $values   = explode(',', $queryVar);
+
+        return in_array($option->getValue(), $values);
+    }
+
+    public function getActiveRangeFrom($value)
+    {
+        $queryVar = get_query_var($this->getSlug());
+        $values   = explode('-', $queryVar);
+
+        if ($values[0] != '') {
+            return $values[0];
+        } else {
+            return $value;
+        }
+    }
+
+    public function getActiveRangeTo($value)
+    {
+        $queryVar = get_query_var($this->getSlug());
+        $values   = explode('-', $queryVar);
+
+        if ($values[0] != '') {
+            return $values[1];
+        } else {
+            return $value;
+        }
     }
 }
