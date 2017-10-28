@@ -5,8 +5,8 @@ namespace Pfs;
 
 class Navigation
 {
-    const TAXONOMY_TEMPLATE = 'checkbox';
-    const META_TEMPLATE = 'range';
+    const CHECKBOX_TEMPLATE = 'checkbox';
+    const RANGE_TEMPLATE = 'range';
 
     const TAXONOMY_TYPE = 'taxonomy';
     const META_TYPE = 'meta';
@@ -27,22 +27,71 @@ class Navigation
         return $this;
     }
 
-    public function getActiveFilters()
+    private function getActiveOptions(Filter $filter)
     {
-        $activeFilters = [];
-// TODO active filters
-//        foreach ($this->getGroups() as $name => $options) {
-//            $slug = $this->getFilterSlug($name);
-//            if (get_query_var($slug) !== '') {
-//                $activeFilters[$slug] = explode(',', get_query_var($slug));
-//            };
-//        }
-//
-//        if (get_query_var('paged') != 0) {
-//            $activeFilters['page'] = get_query_var('paged');
-//        }
+        $values = [];
 
-        return $activeFilters;
+        switch ($filter->getTemplate()) {
+            case self::CHECKBOX_TEMPLATE:
+                $values = $this->getMultiActiveOptions($filter);
+                break;
+            case self::RANGE_TEMPLATE:
+                if ($this->getRangeActiveOption($filter)) {
+                    $values[] = $this->getRangeActiveOption($filter);
+                }
+                break;
+        }
+
+        return $values;
+    }
+
+    public function getRangeActiveOption(Filter $filter)
+    {
+        $from = $filter->getActiveRangeFrom();
+        $to   = $filter->getActiveRangeTo();
+
+        if ($from && $to) {
+            return $from . '-' . $to;
+        } else {
+            return false;
+        }
+
+    }
+
+    private function getMultiActiveOptions(Filter $filter)
+    {
+        $values = [];
+
+        /** @var Option $option */
+        foreach ($filter->getOptions() as $option) {
+            if ($filter->isOptionActive($option)) {
+                $values[] = $option->getValue();
+            }
+        }
+
+        return $values;
+    }
+
+    public function getFiltersJson()
+    {
+        $filters = [];
+
+        if ( ! $this->getFilters()) {
+            return '';
+        }
+
+        /** @var Filter $filter */
+        foreach ($this->getFilters() as $filter) {
+            $values = $this->getActiveOptions($filter);
+
+            $filters[] = [
+                'slug'   => $filter->getSlug(),
+                'order'  => $filter->getOrder(),
+                'values' => $values
+            ];
+        }
+
+        return json_encode($filters);
     }
 
     public function getFilterValue($key)

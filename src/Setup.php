@@ -166,30 +166,7 @@ class Setup
         return $navigations;
     }
 
-    public
-    function addActiveFilters(
-        $localize
-    ) {
-        $instances = $this->getNavigations();
-        /** @var Navigation $filters */
-
-        foreach ($instances as $filters) {
-            if (is_page($filters->getPageId())) {
-                $localize['scripts'] = [
-                    'prefix'  => 'pfs',
-                    'strings' => [
-                        'pageUrl'       => get_post($filters->getPageId())->post_name,
-                        'activeFilters' => $filters->getActiveFilters()
-                    ]
-                ];
-            }
-        }
-
-        return $localize;
-    }
-
-    public
-    function loadNavigationInstance()
+    public function loadNavigationInstance()
     {
         $instances = $this->getNavigations();
 
@@ -207,13 +184,11 @@ class Setup
         return '';
     }
 
-    private
-    function addActions()
+    private function addActions()
     {
         add_action('wp_enqueue_scripts', [$this, 'addAssets']);
         add_filter('template_include', [$this, 'setupPageTemplate'], 99);
         add_action('init', [$this, 'addRewrites']);
-        add_filter('pfs_localize', [$this, 'addActiveFilters']);
         add_filter('navigation_instance', [$this, 'loadNavigationInstance']);
     }
 }

@@ -153,7 +153,7 @@ class Filter
         return in_array($option->getValue(), $values);
     }
 
-    public function getActiveRangeFrom($value)
+    public function getActiveRangeFrom($value = 0)
     {
         $queryVar = get_query_var($this->getSlug());
         $values   = explode('-', $queryVar);
@@ -165,7 +165,7 @@ class Filter
         }
     }
 
-    public function getActiveRangeTo($value)
+    public function getActiveRangeTo($value = 0)
     {
         $queryVar = get_query_var($this->getSlug());
         $values   = explode('-', $queryVar);

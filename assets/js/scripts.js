@@ -2,6 +2,14 @@
 
 var $ = jQuery;
 
+// Filter model
+
+var Filter = function (data) {
+    this.slug = data.slug;
+    this.order = data.order;
+    this.values = [];
+};
+
 // Range
 
 var range = (function () {
@@ -43,7 +51,7 @@ var range = (function () {
 
 var store = (function () {
 
-    var filters = [];
+    var filters = getFilters();
 
     function add(data) {
         var filter = find(data.slug);
@@ -105,6 +113,21 @@ var store = (function () {
         });
     }
 
+    function getFilters() {
+        var filters = [];
+        var filtersJson = $('[data-pfs]').data('pfs').filters;
+
+        filtersJson.map(function (data) {
+            var values = data.values;
+            var filter = new Filter(data);
+
+            filter.values = values;
+            filters.push(filter);
+        });
+
+        return filters;
+    }
+
     return {
         add: add,
         change: change,
@@ -124,6 +147,10 @@ var url = (function () {
         data = order(data);
 
         data.map(function (filter) {
+            if (!filter.values.length) {
+                return;
+            }
+
             url += filter.slug;
             url += '/';
             url += filter.values.join(',');
@@ -137,7 +164,7 @@ var url = (function () {
     }
 
     function change(data) {
-        var page = $('[data-pfs]').data('pfs');
+        var page = $('[data-pfs]').data('pfs').permalink;
         var url = generate(data);
 
         window.location.href = page + url;
@@ -156,14 +183,6 @@ var url = (function () {
     }
 
 })();
-
-// Filter model
-
-var Filter = function (data) {
-    this.slug = data.slug;
-    this.order = data.order;
-    this.values = [];
-};
 
 // Bind events
 
