@@ -213,4 +213,15 @@ $('[data-pfs-range]').each(function () {
     range.change(this, options);
 });
 
+$('[data-pfs-pagination]').find('a').click(function (e) {
+    e.preventDefault();
 
+    var url = this.href;
+    var page = url.match(/page\/(\d+)/)[1];
+
+    store.change({
+        'slug': 'page',
+        'order': 999,
+        'value': page
+    });
+});

@@ -15,7 +15,7 @@ $args = array(
 );
 
 ?>
-<!--TODO add js events -->
-<div>
+
+<div data-pfs-pagination>
     <?php echo paginate_links($args); ?>
 </div>
