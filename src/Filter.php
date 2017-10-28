@@ -154,11 +154,6 @@ class Filter
         return in_array($option->getValue(), $values);
     }
 
-    public function getActiveOptions()
-    {
-
-    }
-
     public function getActiveRangeFrom($default)
     {
         $queryVar = get_query_var($this->getSlug());
