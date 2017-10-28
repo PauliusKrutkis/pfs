@@ -11,9 +11,7 @@ class Navigation
     const TAXONOMY_TYPE = 'taxonomy';
     const META_TYPE = 'meta';
 
-    protected $filterGroups;
     protected $pageId;
-    protected $urlRewrite = true;
     protected $query;
     protected $paged;
     protected $filters = [];
@@ -32,23 +30,32 @@ class Navigation
         $values = [];
 
         switch ($filter->getTemplate()) {
-            case self::CHECKBOX_TEMPLATE:
-                $values = $this->getMultiActiveOptions($filter);
-                break;
             case self::RANGE_TEMPLATE:
                 if ($this->getRangeActiveOption($filter)) {
                     $values[] = $this->getRangeActiveOption($filter);
                 }
+                break;
+            default:
+                $options = array_filter($filter->getOptions(), function ($option) use ($filter) {
+                    /** @var Option $option */
+                    return $filter->isOptionActive($option);
+                });
+
+                $values = array_map(function ($option) {
+                    /** @var Option $option */
+                    return $option->getValue();
+                }, array_values($options));
+
                 break;
         }
 
         return $values;
     }
 
-    public function getRangeActiveOption(Filter $filter)
+    private function getRangeActiveOption(Filter $filter)
     {
-        $from = $filter->getActiveRangeFrom();
-        $to   = $filter->getActiveRangeTo();
+        $from = $filter->getActiveRangeFrom(false);
+        $to   = $filter->getActiveRangeTo(false);
 
         if ($from && $to) {
             return $from . '-' . $to;
@@ -56,20 +63,6 @@ class Navigation
             return false;
         }
 
-    }
-
-    private function getMultiActiveOptions(Filter $filter)
-    {
-        $values = [];
-
-        /** @var Option $option */
-        foreach ($filter->getOptions() as $option) {
-            if ($filter->isOptionActive($option)) {
-                $values[] = $option->getValue();
-            }
-        }
-
-        return $values;
     }
 
     public function getFiltersJson()
@@ -94,36 +87,6 @@ class Navigation
         return json_encode($filters);
     }
 
-    public function getFilterValue($key)
-    {
-        $slug = $this->getFilterSlug($key);
-
-        return get_query_var($slug);
-    }
-
-    public function getFilterSlug($key)
-    {
-        $slug        = '';
-        $filterGroup = $this->getGroups()[$key];
-
-        switch ($filterGroup['type']) {
-            case self::META_TYPE:
-                $slug = $key;
-                break;
-
-            case self::TAXONOMY_TYPE:
-                $slug = $this->helper->getTaxLabel($key);
-                break;
-        }
-
-        return strtolower($slug);
-    }
-
-    public function getUrlRewrite()
-    {
-        return $this->urlRewrite;
-    }
-
     public function setQuery($query)
     {
         $this->query = $query;
@@ -145,50 +108,85 @@ class Navigation
 
     public function getQuery()
     {
-//        TODO query
-//        $this->query['tax_query']  = $this->getTaxQueryArgs();
-//        $this->query['meta_query'] = $this->getMetaQueryArgs();
-        $this->query['paged'] = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
+        $this->query['meta_query'] = $this->getMetaQueryData();
+        $this->query['tax_query']  = $this->getTaxQueryData();
+        $this->query['paged']      = $this->getPagedQuery();
 
         return new \WP_Query($this->query);
     }
 
-    public function addTaxonomyFilter($taxonomy, $args = null)
+    private function getPagedQuery()
     {
-        $filterArgs = [
-            'template' => self::TAXONOMY_TEMPLATE,
-            'type'     => self::TAXONOMY_TYPE,
-        ];
-
-        if ($args) {
-            $filterArgs = $filterArgs + $args;
-        }
-
-        $this->filterGroups[$taxonomy] = $filterArgs;
-
-        return $this;
+        return (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
     }
 
-    public function addMetaFilter($meta, $args)
+    private function getTaxQueryData()
     {
-        $filterArgs = [
-            'template' => self::META_TEMPLATE,
-            'type'     => self::META_TYPE,
-        ];
+        $count = 0;
+        $data  = [];
 
-        if ($args) {
-            $filterArgs = $filterArgs + $args;
+        $filters = array_filter($this->getFilters(), function ($filter) {
+            /** @var Filter $filter */
+            return $filter->getType() === self::TAXONOMY_TYPE;
+        });
+
+        foreach ($filters as $filter) {
+            /** @var Filter $filter */
+            if ($count > 0) {
+                $data['relation'] = 'AND';
+            }
+
+            if ($this->getActiveOptions($filter)) {
+                $data[] = [
+                    'taxonomy' => $filter->getTaxonomy(),
+                    'field'    => 'slug',
+                    'terms'    => $this->getActiveOptions($filter),
+                ];
+
+                $count++;
+            }
         }
 
-        $this->filterGroups[$meta] = $filterArgs;
-
-        return $this;
+        return $data;
     }
 
-
-    public function getGroups()
+    private function getMetaQueryData()
     {
-        return $this->filterGroups;
+        $count = 0;
+        $data  = [];
+
+        $filters = array_filter($this->getFilters(), function ($filter) {
+            /** @var Filter $filter */
+            return $filter->getType() === self::META_TYPE;
+        });
+
+        foreach ($filters as $filter) {
+            /** @var Filter $filter */
+            if ($count > 0) {
+                $data['relation'] = 'AND';
+            }
+
+            // TODO checkbox template
+            switch ($filter->getTemplate()) {
+                case self::RANGE_TEMPLATE:
+                    $data[] = $this->getRangeQueryData($filter);
+                    break;
+            }
+
+            $count++;
+        }
+
+        return $data;
+    }
+
+    private function getRangeQueryData(Filter $filter)
+    {
+        return [
+            'key'     => $filter->getMeta(),
+            'value'   => [$filter->getActiveRangeFrom(true), $filter->getActiveRangeTo(true)],
+            'type'    => 'numeric',
+            'compare' => 'BETWEEN'
+        ];
     }
 
     public function output($template)
@@ -197,108 +195,11 @@ class Navigation
             return '';
         }
 
-        $this->getTemplate($template);
-    }
-
-    public function getTemplate($template, $data = null)
-    {
         $template = new View($template);
-
-        if ($data) {
-            foreach ($data as $name => $value) {
-                $template->set($name, $value);
-            }
-        }
 
         $template->set('navigation', $this);
 
         $template->output();
-    }
-
-    private function getMetaQueryArgs()
-    {
-        $activeCount = 0;
-        $query       = [];
-        $metaGroups  = array_filter($this->filterGroups, function ($group) {
-            return $group['type'] === self::META_TYPE;
-        });
-
-        foreach ($metaGroups as $meta => $options) {
-            $slug  = $this->getFilterSlug($meta);
-            $value = $this->getFilterValue($slug);
-
-            if (isset($value) && $value != '') {
-                if ($activeCount > 0) {
-                    $query['relation'] = 'AND';
-                }
-
-                switch ($options['template']) {
-                    case self::META_TEMPLATE:
-                        $query[] = [
-                            'key'     => $meta,
-                            'value'   => explode('-', $value),
-                            'type'    => 'numeric',
-                            'compare' => 'BETWEEN'
-                        ];
-                        break;
-                }
-
-                $activeCount++;
-            } else if ($options['template'] == self::META_TEMPLATE) {
-                if ($activeCount > 0) {
-                    $query['relation'] = 'AND';
-                }
-
-                $query[] = [
-                    'key'     => $meta,
-                    'value'   => [$options['min'], $options['max']],
-                    'type'    => 'numeric',
-                    'compare' => 'BETWEEN'
-                ];
-
-                $activeCount++;
-            }
-        }
-
-        if (isset($query)) {
-            $args['meta_query'] = $query;
-        }
-
-        return $query;
-    }
-
-    private function getTaxQueryArgs()
-    {
-        $activeCount = 0;
-        $query       = [];
-        $taxGroups   = array_filter($this->filterGroups, function ($group) {
-            return $group['type'] === self::TAXONOMY_TYPE;
-        });
-
-        foreach ($taxGroups as $taxonomy => $options) {
-            $value = $this->getFilterValue($taxonomy);
-
-            if (isset($value) && $value != '') {
-
-                if ($activeCount > 0) {
-                    $query['relation'] = 'AND';
-                }
-
-                $query[] = [
-                    'taxonomy' => $taxonomy,
-                    'field'    => 'slug',
-                    'terms'    => explode(',', $value),
-                ];
-
-                $activeCount++;
-            }
-        }
-
-        if (isset($query)) {
-            $args['tax_query'] = $query;
-        }
-
-        return $query;
     }
 
     public function getPaged()

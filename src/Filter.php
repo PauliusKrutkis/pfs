@@ -13,6 +13,7 @@ class Filter
     private $template = '';
     private $taxonomy = '';
     private $order = 0;
+    private $meta = '';
 
     public function __construct($name, $type, $template)
     {
@@ -153,27 +154,60 @@ class Filter
         return in_array($option->getValue(), $values);
     }
 
-    public function getActiveRangeFrom($value = 0)
+    public function getActiveOptions()
+    {
+
+    }
+
+    public function getActiveRangeFrom($default)
     {
         $queryVar = get_query_var($this->getSlug());
         $values   = explode('-', $queryVar);
 
         if ($values[0] != '') {
             return $values[0];
+        }
+
+        if ($default) {
+            return $this->getOptions()[0]->getValue();
         } else {
-            return $value;
+            return false;
         }
     }
 
-    public function getActiveRangeTo($value = 0)
+    public function getActiveRangeTo($default)
     {
         $queryVar = get_query_var($this->getSlug());
         $values   = explode('-', $queryVar);
 
         if ($values[0] != '') {
             return $values[1];
-        } else {
-            return $value;
         }
+
+        if ($default) {
+            return $this->getOptions()[1]->getValue();
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param string $meta
+     *
+     * @return Filter
+     */
+    public function setMeta($meta)
+    {
+        $this->meta = $meta;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMeta()
+    {
+        return $this->meta;
     }
 }

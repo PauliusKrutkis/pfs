@@ -119,6 +119,10 @@ class Setup
         $settings    = apply_filters('pfs_navigation', null);
         $navigations = [];
 
+        if ( ! $settings) {
+            return '';
+        }
+
         foreach ($settings as $setting) {
             $navigation = new Navigation();
             $filters    = [];
@@ -138,6 +142,10 @@ class Setup
 
                 if (isset($arguments['taxonomy'])) {
                     $filter->setTaxonomy($arguments['taxonomy']);
+                }
+
+                if (isset($arguments['meta'])) {
+                    $filter->setMeta($arguments['meta']);
                 }
 
                 if (isset($arguments['values'])) {

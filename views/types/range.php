@@ -1,6 +1,5 @@
 <?php
 /** @var \Pfs\Filter $filter */
-// TODO active
 $filter  = $this->get('filter');
 $slug    = $filter->getSlug();
 $options = $filter->getOptions();
@@ -12,8 +11,8 @@ $options = $filter->getOptions();
             "slug": "<?php echo $filter->getSlug() ?>",
             "from": "#<?php echo $filter->getSlug() ?>-from",
             "to": "#<?php echo $filter->getSlug() ?>-to",
-            "activeFrom": <?php echo $filter->getActiveRangeFrom($options[0]->getValue()) ?>,
-            "activeTo": <?php echo $filter->getActiveRangeTo($options[1]->getValue()) ?>,
+            "activeFrom": <?php echo $filter->getActiveRangeFrom(true) ?>,
+            "activeTo": <?php echo $filter->getActiveRangeTo(true) ?>,
             "min": <?php echo $options[0]->getValue() ?>,
             "max": <?php echo $options[1]->getValue() ?>,
             "order": <?php echo $filter->getOrder() ?>

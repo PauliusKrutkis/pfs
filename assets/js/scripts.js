@@ -114,8 +114,14 @@ var store = (function () {
     }
 
     function getFilters() {
+        var $pfs = $('[data-pfs]');
         var filters = [];
-        var filtersJson = $('[data-pfs]').data('pfs').filters;
+
+        if (!$pfs.length) {
+            return;
+        }
+
+        var filtersJson = $pfs.data('pfs').filters;
 
         filtersJson.map(function (data) {
             var values = data.values;
