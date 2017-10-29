@@ -5,6 +5,8 @@
 
 <dl data-pfs='{
     "permalink": "<?php echo get_permalink() ?>",
+    "ajax": "<?php echo $navigation->isAjax() ?>",
+    "page": <?php echo $navigation->getPageId() ?>,
     "filters": <?php echo $navigation->getFiltersJson() ?>
 }'>
     <?php

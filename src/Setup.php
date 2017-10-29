@@ -25,15 +25,11 @@ class Setup
 
     public function addAssets()
     {
-        $styles   = apply_filters('pfs_styles', $this->styles);
-        $scripts  = apply_filters('pfs_scripts', $this->scripts);
-        $localize = apply_filters('pfs_localize', $this->localize);
-
-        foreach ($styles as $name => $options) {
+        foreach ($this->styles as $name => $options) {
             wp_enqueue_style($name, $this->directory . $options['src']);
         }
 
-        foreach ($scripts as $name => $options) {
+        foreach ($this->scripts as $name => $options) {
             wp_enqueue_script(
                 $name,
                 $this->directory . $options['src'],
@@ -43,7 +39,7 @@ class Setup
             );
         }
 
-        foreach ($localize as $name => $options) {
+        foreach ($this->localize as $name => $options) {
             wp_localize_script(
                 $name,
                 $options['prefix'],
@@ -54,19 +50,15 @@ class Setup
 
     public function setupPageTemplate($template)
     {
-        /** @var Navigation $layeredNavigation */
+        /** @var Navigation $navigation */
         $instances = $this->getNavigations();
 
         if ( ! $instances) {
             return $template;
         }
 
-        foreach ($instances as $layeredNavigation) {
-            if ( ! $layeredNavigation instanceof Navigation) {
-                throw new \Exception("layered_navigation hook requires Layered_Navigation object(s)");
-            }
-
-            if (is_page($layeredNavigation->getPageId())) {
+        foreach ($instances as $navigation) {
+            if (is_page($navigation->getPageId())) {
                 $view = new View('page');
 
                 return $view->getFilaPath();
@@ -79,18 +71,13 @@ class Setup
     public function addRewrites()
     {
         /** @var Navigation $navigations */
-        $navigations = $this->getNavigations();
+        $instances = $this->getNavigations();
 
-        if ( ! $navigations) {
+        if ( ! $instances) {
             return '';
         }
 
-        foreach ($navigations as $navigation) {
-            if ( ! $navigation instanceof Navigation) {
-                // TODO change message
-                throw new \Exception("layered_navigation hook requires Filters object(s)");
-            }
-
+        foreach ($instances as $navigation) {
             $pageId      = $navigation->getPageId();
             $pageSlug    = get_post($pageId)->post_name;
             $position    = 2;
@@ -131,6 +118,10 @@ class Setup
             $navigation->setPaged($setting['paged']);
             $navigation->setPageId($setting['page']);
             $navigation->setQuery($setting['query']);
+
+            if (isset($setting['ajax'])) {
+                $navigation->setAjax($setting['ajax']);
+            }
 
             foreach ($setting['filters'] as $arguments) {
                 $filter = new Filter($arguments['title'], $arguments['type'], $arguments['template']);
@@ -192,11 +183,35 @@ class Setup
         return '';
     }
 
+    public function getNavigation()
+    {
+        $instances  = $this->getNavigations();
+        $navigation = null;
+        $pageId     = $_GET['page'];
+        $data       = $_GET['data'];
+
+        foreach ($instances as $instance) {
+            /** @var Navigation $instance */
+            if ($instance->getPageId() == $pageId) {
+                $navigation = $instance;
+                break;
+            }
+        }
+
+        foreach ($data as $filter) {
+            set_query_var($filter['slug'], implode(',', $filter['values']));
+        }
+
+        die();
+    }
+
     private function addActions()
     {
         add_action('wp_enqueue_scripts', [$this, 'addAssets']);
         add_filter('template_include', [$this, 'setupPageTemplate'], 99);
         add_action('init', [$this, 'addRewrites']);
         add_filter('navigation_instance', [$this, 'loadNavigationInstance']);
+        add_action('wp_ajax_getNavigation', [$this, 'getNavigation']);
+        add_action('wp_ajax_nopriv_getNavigation', [$this, 'getNavigation']);
     }
 }

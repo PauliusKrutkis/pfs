@@ -15,15 +15,7 @@ class Navigation
     protected $query;
     protected $paged;
     protected $filters = [];
-
-    public $helper;
-
-    function __construct()
-    {
-        $this->helper = new Helper();
-
-        return $this;
-    }
+    protected $ajax = false;
 
     private function getActiveOptions(Filter $filter)
     {
@@ -232,6 +224,26 @@ class Navigation
     public function getFilters()
     {
         return $this->filters;
+    }
+
+    /**
+     * @param bool $ajax
+     *
+     * @return Navigation
+     */
+    public function setAjax($ajax)
+    {
+        $this->ajax = $ajax;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAjax()
+    {
+        return $this->ajax;
     }
 
 }

@@ -64,7 +64,7 @@ var store = (function () {
             filters.push(filter);
         }
 
-        url.change(filters);
+        url.update(filters);
     }
 
     function change(data) {
@@ -79,7 +79,7 @@ var store = (function () {
             filters.push(filter);
         }
 
-        url.change(filters);
+        url.update(filters);
     }
 
     function remove(data) {
@@ -94,7 +94,7 @@ var store = (function () {
             return '';
         }
 
-        url.change(filters);
+        url.update(filters);
     }
 
     function empty(data) {
@@ -104,7 +104,7 @@ var store = (function () {
             filter.values = [];
         }
 
-        url.change(filters);
+        url.update(filters);
     }
 
     function find(slug) {
@@ -169,11 +169,32 @@ var url = (function () {
         return url;
     }
 
-    function change(data) {
-        var page = $('[data-pfs]').data('pfs').permalink;
-        var url = generate(data);
+    function update(data) {
+        var settings = $('[data-pfs]').data('pfs');
+        var page = settings.permalink;
+        var ajax = settings.ajax;
+        var url = page + generate(data);
 
-        window.location.href = page + url;
+        if (ajax) {
+            updateContent(url, settings, data);
+        } else {
+            window.location.href = url;
+        }
+    }
+
+    function updateContent(url, settings, data) {
+
+        var query = {
+            action: 'getNavigation',
+            page: settings.page,
+            data: data
+        };
+
+        $.get(pfs.ajaxUrl, query)
+            .done(function (response) {
+                window.history.pushState(null, "", url);
+            });
+
     }
 
     function order(data) {
@@ -185,7 +206,7 @@ var url = (function () {
     }
 
     return {
-        change: change
+        update: update
     }
 
 })();
