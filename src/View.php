@@ -39,6 +39,15 @@ class View
         include $this->getFilaPath();
     }
 
+    public function getHtml()
+    {
+        ob_start();
+
+        $this->output();
+
+        return ob_get_clean();
+    }
+
     public function getFilaPath()
     {
         return $this->dir . '/' . $this->file . '.php';

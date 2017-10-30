@@ -1,23 +1,23 @@
 <?php
 /** @var \Pfs\Navigation $navigation */
 $navigation = apply_filters('navigation_instance', null);
-$query      = $navigation->getQuery();
 get_header();
 ?>
 
-<div class="container">
+    <div class="container">
 
-    <?php $navigation->output('navigation') ?>
+        <div data-pfs-navigation>
+            <?php $navigation->output('navigation') ?>
+        </div>
 
-    <?php
-    while ($query->have_posts()) {
-        $query->the_post();
-        get_template_part('partials/article');
-    }
-    ?>
+        <div data-pfs-posts>
+            <?php $navigation->output('posts') ?>
+        </div>
 
-    <?php $navigation->output('pagination') ?>
+        <div data-pfs-pagination>
+            <?php $navigation->output('pagination') ?>
+        </div>
 
-</div>
+    </div>
 
 <?php get_footer(); ?>

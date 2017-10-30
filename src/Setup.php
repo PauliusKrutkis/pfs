@@ -199,8 +199,22 @@ class Setup
         }
 
         foreach ($data as $filter) {
-            set_query_var($filter['slug'], implode(',', $filter['values']));
+            $slug = $filter['slug'];
+
+            if ($slug == 'page') {
+                $slug = 'paged';
+            }
+
+            set_query_var($slug, implode(',', $filter['values']));
         }
+
+        $response = [
+            '[data-pfs-posts]'      => $navigation->getHtml('posts'),
+            '[data-pfs-pagination]' => $navigation->getHtml('pagination')
+        ];
+
+        header("Content-type: application/json");
+        echo json_encode($response);
 
         die();
     }

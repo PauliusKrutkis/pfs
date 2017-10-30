@@ -194,6 +194,19 @@ class Navigation
         $template->output();
     }
 
+    public function getHtml($template)
+    {
+        if ( ! $this->getPaged() && $template == 'pagination') {
+            return '';
+        }
+
+        $template = new View($template);
+
+        $template->set('navigation', $this);
+
+        return $template->getHtml();
+    }
+
     public function getPaged()
     {
         return $this->paged;

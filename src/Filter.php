@@ -90,7 +90,7 @@ class Filter
         return $this->template;
     }
 
-    public function getHtml()
+    public function getRawHtml()
     {
         $view = new View('types/' . $this->template);
         $view->set('filter', $this);

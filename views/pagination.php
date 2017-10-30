@@ -3,19 +3,11 @@
 $navigation = $this->get('navigation');
 $query      = $navigation->getQuery();
 
-$args = array(
-    'base'      => str_replace($query->max_num_pages, '%#%', esc_url(get_pagenum_link($query->max_num_pages))),
-    'format'    => '?paged=%#%',
-    'total'     => $query->max_num_pages,
-    'current'   => max(1, get_query_var('paged')),
-    'mid_size'  => 1,
-    'prev_text' => __('«'),
-    'next_text' => __('»'),
-    'type'      => 'list',
-);
+$totalItems   = $query->found_posts;
+$itemsPerPage = $query->query['posts_per_page'];
+$currentPage  = (get_query_var('paged') == 0) ? 1 : get_query_var('paged');
+$urlPattern   = '(:num)';
 
-?>
-
-<div data-pfs-pagination>
-    <?php echo paginate_links($args); ?>
-</div>
+$pagination = new Pfs\Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
+$pagination->setMaxPagesToShow(5);
+echo $pagination->toHtml();

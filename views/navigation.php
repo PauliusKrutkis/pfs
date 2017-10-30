@@ -12,7 +12,7 @@
     <?php
     /** @var \Pfs\Filter $filter */
     foreach ($navigation->getFilters() as $filter) {
-        $filter->getHtml();
+        $filter->getRawHtml();
     }
     ?>
 </dl>

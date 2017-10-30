@@ -192,6 +192,11 @@ var url = (function () {
 
         $.get(pfs.ajaxUrl, query)
             .done(function (response) {
+                for (var fragment in response) {
+                    if (response.hasOwnProperty(fragment)) {
+                        $(fragment).html(response[fragment]);
+                    }
+                }
                 window.history.pushState(null, "", url);
             });
 
@@ -240,11 +245,9 @@ $('[data-pfs-range]').each(function () {
     range.change(this, options);
 });
 
-$('[data-pfs-pagination]').find('a').click(function (e) {
+$('[data-pfs-pagination]').delegate('[data-page]', 'click', function (e) {
     e.preventDefault();
-
-    var url = this.href;
-    var page = url.match(/page\/(\d+)/)[1];
+    var page = $(this).data('page');
 
     store.change({
         'slug': 'page',
