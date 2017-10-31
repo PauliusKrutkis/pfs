@@ -15,6 +15,7 @@ function addPfsInstance($filters)
     $args = [
         'paged'   => true,
         'page'    => 119,
+        'ajax'    => true,
         'query'   => [
             'post_type'      => 'post',
             'posts_per_page' => 10
@@ -48,4 +49,16 @@ function addPfsInstance($filters)
 }
 
 add_filter('pfs_navigation', 'addPfsInstance');
+```
+
+#### Example on how to add event listeners when filters are updating
+
+```js
+$('[data-pfs-navigation]').on('update_start', function () {
+    console.log('start');
+});
+
+$('[data-pfs-navigation]').on('update_done', function () {
+    console.log('done');
+});
 ```
