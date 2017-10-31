@@ -7,13 +7,13 @@ return [
         ],
     ],
     'scripts'  => [
-        'nouislider' => [
+        'nouislider'  => [
             'src'       => '/assets/js/lib/nouislider.min.js',
             'deps'      => null,
             'ver'       => null,
             'in-footer' => true
         ],
-        'scripts'    => [
+        'pfs-scripts' => [
             'src'       => '/assets/js/scripts.js',
             'deps'      => ['jquery'],
             'ver'       => null,
@@ -21,7 +21,7 @@ return [
         ]
     ],
     'localize' => [
-        'scripts' => [
+        'pfs-scripts' => [
             'prefix'  => 'pfs',
             'strings' => [
                 'ajaxUrl' => admin_url('admin-ajax.php'),

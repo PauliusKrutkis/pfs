@@ -32,6 +32,11 @@ var range = (function () {
                 return Math.round(number)
             }).join('-');
 
+            store.empty({
+                'slug': 'page',
+                'noUpdate': true
+            });
+
             if ((Math.round(values[0]) !== options.min) || (Math.round(values[1]) !== options.max)) {
                 options.value = value;
                 store.change(options);
@@ -51,6 +56,7 @@ var range = (function () {
 
 var store = (function () {
 
+    var $navigation = $('[data-pfs-navigation]');
     var filters = getFilters();
 
     function add(data) {
@@ -104,7 +110,9 @@ var store = (function () {
             filter.values = [];
         }
 
-        url.update(filters);
+        if (!data.noUpdate) {
+            url.update(filters);
+        }
     }
 
     function find(slug) {
@@ -114,14 +122,13 @@ var store = (function () {
     }
 
     function getFilters() {
-        var $pfs = $('[data-pfs]');
         var filters = [];
 
-        if (!$pfs.length) {
+        if (!$navigation.length) {
             return;
         }
 
-        var filtersJson = $pfs.data('pfs').filters;
+        var filtersJson = $navigation.data('pfs-navigation').filters;
 
         filtersJson.map(function (data) {
             var values = data.values;
@@ -138,7 +145,38 @@ var store = (function () {
         add: add,
         change: change,
         remove: remove,
-        empty: empty
+        empty: empty,
+        navigation: $navigation
+    }
+
+})();
+
+// Events
+
+var events = (function () {
+
+    function dispatch(element, name) {
+        var event;
+
+        if (document.createEvent) {
+            event = document.createEvent("HTMLEvents");
+            event.initEvent(name, true, true);
+        } else {
+            event = document.createEventObject();
+            event.eventType = name;
+        }
+
+        event.eventName = name;
+
+        if (document.createEvent) {
+            element.dispatchEvent(event);
+        } else {
+            element.fireEvent("on" + event.eventType, event);
+        }
+    }
+
+    return {
+        dispatch: dispatch
     }
 
 })();
@@ -163,14 +201,11 @@ var url = (function () {
             url += '/';
         });
 
-        // remove last slash
-        url = url.slice(0, -1);
-
         return url;
     }
 
     function update(data) {
-        var settings = $('[data-pfs]').data('pfs');
+        var settings = store.navigation.data('pfs-navigation');
         var page = settings.permalink;
         var ajax = settings.ajax;
         var url = page + generate(data);
@@ -190,6 +225,8 @@ var url = (function () {
             data: data
         };
 
+        events.dispatch(store.navigation[0], 'update_start');
+
         $.get(pfs.ajaxUrl, query)
             .done(function (response) {
                 for (var fragment in response) {
@@ -197,9 +234,10 @@ var url = (function () {
                         $(fragment).html(response[fragment]);
                     }
                 }
-                window.history.pushState(null, "", url);
-            });
 
+                window.history.pushState(null, "", url);
+                events.dispatch(store.navigation[0], 'update_done');
+            });
     }
 
     function order(data) {
@@ -221,11 +259,17 @@ var url = (function () {
 $('[data-pfs-checkbox]').click(function () {
     var data = $(this).data('pfs-checkbox');
 
+    store.empty({
+        'slug': 'page',
+        'noUpdate': true
+    });
+
     if (this.checked) {
         store.add(data);
     } else {
         store.remove(data);
     }
+
 });
 
 $('[data-pfs-range]').each(function () {
@@ -249,9 +293,15 @@ $('[data-pfs-pagination]').delegate('[data-page]', 'click', function (e) {
     e.preventDefault();
     var page = $(this).data('page');
 
-    store.change({
-        'slug': 'page',
-        'order': 999,
-        'value': page
-    });
+    if (page !== 1) {
+        store.change({
+            'slug': 'page',
+            'order': 999,
+            'value': page
+        });
+    } else {
+        store.empty({
+            'slug': 'page'
+        });
+    }
 });
