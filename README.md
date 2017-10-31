@@ -15,6 +15,7 @@ function addPfsInstance($filters)
     $args = [
         'paged'   => true,
         'page'    => 119,
+        'ajax'    => true,
         'query'   => [
             'post_type'      => 'post',
             'posts_per_page' => 10
