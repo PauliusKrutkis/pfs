@@ -62,3 +62,8 @@ $('[data-pfs-navigation]').on('update_done', function () {
     console.log('done');
 });
 ```
+
+If you need to edit any of the template files you can copy them into a directory within your theme named /pfs, keeping the same file structure but removing the /views/ subdirectory.
+
+**Example:** To override the checkbox template, copy: **wp-content/plugins/pfs/views/types/checkbox.php** to **wp-ontent/themes/yourtheme/pfs/types/checkbox.php**
+
