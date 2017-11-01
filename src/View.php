@@ -6,14 +6,19 @@ namespace Pfs;
 
 class View
 {
+    const THEME_TEMPLATE_DIR_NAME = 'pfs';
+
     protected $file;
     protected $values;
     protected $dir;
+    protected $themeTemplateDir;
 
     function __construct($file)
     {
         $this->dir  = Config::getPluginDir() . '/views';
         $this->file = $file;
+
+        $this->themeTemplateDir = get_template_directory() . '/' . self::THEME_TEMPLATE_DIR_NAME;
     }
 
     public function set($key, $value)
@@ -50,7 +55,13 @@ class View
 
     public function getFilaPath()
     {
-        return $this->dir . '/' . $this->file . '.php';
+        $dir = $this->dir;
+
+        if (file_exists($this->themeTemplateDir . '/' . $this->file . '.php')) {
+            $dir = $this->themeTemplateDir;
+        }
+
+        return $dir . '/' . $this->file . '.php';
     }
 
     public function setPartialDir($dir)
