@@ -158,14 +158,21 @@ class Navigation
                 $data['relation'] = 'AND';
             }
 
-            // TODO checkbox template
-            switch ($filter->getTemplate()) {
-                case self::RANGE_TEMPLATE:
-                    $data[] = $this->getRangeQueryData($filter);
-                    break;
+            if ($filter->getTemplate() == self::RANGE_TEMPLATE) {
+                $data[] = $this->getRangeQueryData($filter);
+                $count++;
+                continue;
             }
 
-            $count++;
+            if ($this->getActiveOptions($filter)) {
+                $data[] = [
+                    'key'     => $filter->getMeta(),
+                    'value'   => $this->getActiveOptions($filter),
+                    'compare' => 'IN'
+                ];
+                $count++;
+            }
+
         }
 
         return $data;

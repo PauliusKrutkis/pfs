@@ -93,7 +93,7 @@ var store = (function () {
 
         if (filter) {
             var index = filter.values.indexOf(data.value);
-            if (index > -1) {
+            if (index > -2) {
                 filter.values.splice(index, 1);
             }
         } else {

@@ -149,7 +149,13 @@ class Filter
     public function isOptionActive(Option $option)
     {
         $queryVar = get_query_var($this->getSlug());
-        $values   = explode(',', $queryVar);
+
+        if ($queryVar == '') {
+            return false;
+        }
+
+
+        $values = explode(',', $queryVar);
 
         return in_array($option->getValue(), $values);
     }
