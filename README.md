@@ -38,7 +38,20 @@ function addPfsInstance($filters)
                 'template' => 'range',
                 'type'     => 'meta',
                 'meta'     => 'popularity',
-                'values'   => [0, 100]
+                'values'   => [
+                    'min' => 0,
+                    'max' => 100
+                ]
+            ],
+            'status'     => [
+                'title'    => 'Status',
+                'template' => 'checkbox',
+                'type'     => 'meta',
+                'meta'     => 'status',
+                'values'   => [
+                    'Available' => 0,
+                    'Sold'      => 1,
+                ]
             ]
         ]
     ];
