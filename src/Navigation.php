@@ -100,11 +100,13 @@ class Navigation
 
     public function getQuery()
     {
-        $this->query['meta_query'] = $this->getMetaQueryData();
-        $this->query['tax_query']  = $this->getTaxQueryData();
-        $this->query['paged']      = $this->getPagedQuery();
+        $query = $this->query;
 
-        return new \WP_Query($this->query);
+        $query['meta_query'] = $this->getMetaQueryData();
+        $query['tax_query']  = $this->getTaxQueryData();
+        $query['paged']      = $this->getPagedQuery();
+
+        return new \WP_Query($query);
     }
 
     private function getPagedQuery()

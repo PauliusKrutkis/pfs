@@ -14,6 +14,7 @@ class Filter
     private $taxonomy = '';
     private $order = 0;
     private $meta = '';
+    private $dynamicValues = false;
 
     public function __construct($name, $type, $template)
     {
@@ -59,6 +60,11 @@ class Filter
      */
     public function getOptions()
     {
+        if ($this->isDynamicValues()) {
+            $this->options[0] = new Option('min', $this->getMetaMinValue());
+            $this->options[1] = new Option('max', $this->getMetaMaxValue());
+        }
+
         return $this->options;
     }
 
@@ -210,5 +216,43 @@ class Filter
     public function getMeta()
     {
         return $this->meta;
+    }
+
+    /**
+     * @param bool $dynamicValues
+     *
+     * @return Filter
+     */
+    public function setDynamicValues($dynamicValues)
+    {
+        $this->dynamicValues = $dynamicValues;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDynamicValues()
+    {
+        return $this->dynamicValues;
+    }
+
+    private function getMetaMinValue()
+    {
+        global $wpdb;
+
+        $min = $wpdb->get_var("SELECT min(cast(meta_value as unsigned)) FROM wp_postmeta WHERE meta_key='" . $this->getMeta() . "'");
+
+        return $min;
+    }
+
+    private function getMetaMaxValue()
+    {
+        global $wpdb;
+
+        $max = $wpdb->get_var("SELECT max(cast(meta_value as unsigned)) FROM wp_postmeta WHERE meta_key='" . $this->getMeta() . "'");
+
+        return $max;
     }
 }

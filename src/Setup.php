@@ -139,6 +139,10 @@ class Setup
                     $filter->setMeta($arguments['meta']);
                 }
 
+                if (isset($arguments['dynamic'])) {
+                    $filter->setDynamicValues($arguments['dynamic']);
+                }
+
                 if (isset($arguments['values'])) {
                     $options = [];
                     foreach ($arguments['values'] as $key => $value) {
