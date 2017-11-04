@@ -38,10 +38,7 @@ function addPfsInstance($filters)
                 'template' => 'range',
                 'type'     => 'meta',
                 'meta'     => 'popularity',
-                'values'   => [
-                    'min' => 0,
-                    'max' => 100
-                ]
+                'dynamic'  => true,
             ],
             'status'     => [
                 'title'    => 'Status',
