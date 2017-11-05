@@ -60,11 +60,6 @@ class Filter
      */
     public function getOptions()
     {
-        if ($this->isDynamicValues()) {
-            $this->options[0] = new Option('min', $this->getMetaMinValue());
-            $this->options[1] = new Option('max', $this->getMetaMaxValue());
-        }
-
         return $this->options;
     }
 
@@ -226,6 +221,11 @@ class Filter
     public function setDynamicValues($dynamicValues)
     {
         $this->dynamicValues = $dynamicValues;
+
+        if ($dynamicValues) {
+            $this->options[0] = new Option('min', $this->getMetaMinValue());
+            $this->options[1] = new Option('max', $this->getMetaMaxValue());
+        }
 
         return $this;
     }
