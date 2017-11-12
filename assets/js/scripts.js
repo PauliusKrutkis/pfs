@@ -10,48 +10,6 @@ var Filter = function (data) {
     this.values = [];
 };
 
-// Range
-
-var range = (function () {
-    function update(input, options) {
-        var $from = $(options.from);
-        var $to = $(options.to);
-
-        input.noUiSlider.on('update', function (values, handle) {
-            if (handle) {
-                $to.text(Math.round(values[handle]));
-            } else {
-                $from.text(Math.round(values[handle]));
-            }
-        });
-    }
-
-    function change(input, options) {
-        input.noUiSlider.on('change', function (values) {
-            var value = values.map(function (number) {
-                return Math.round(number)
-            }).join('-');
-
-            store.empty({
-                'slug': 'page',
-                'noUpdate': true
-            });
-
-            if ((Math.round(values[0]) !== options.min) || (Math.round(values[1]) !== options.max)) {
-                options.value = value;
-                store.change(options);
-            } else {
-                store.empty(options);
-            }
-        });
-    }
-
-    return {
-        update: update,
-        change: change
-    }
-})();
-
 // Store
 
 var store = (function () {
@@ -272,21 +230,41 @@ $('[data-pfs-checkbox]').click(function () {
 
 });
 
-$('[data-pfs-range]').each(function () {
-    var options = $(this).data('pfs-range');
+$('[data-pfs-range]').slider({
+    range: true,
+    create: function () {
+        var $this = $(this);
+        var options = $this.data('pfs-range');
 
-    noUiSlider.create(this, {
-        start: [options.activeFrom, options.activeTo],
-        connect: [false, true, false],
-        step: 1,
-        range: {
-            'min': [options.min],
-            'max': [options.max]
+        $this.slider('option', 'min', options.min);
+        $this.slider('option', 'max', options.max);
+        $this.slider('option', 'values', [options.activeMin, options.activeMax]);
+
+        $this.find('[data-pfs-range-min]').text($(this).slider("values")[0]);
+        $this.find('[data-pfs-range-max]').text($(this).slider("values")[1]);
+    },
+    slide: function (event, ui) {
+        var $this = $(this);
+
+        $this.find('[data-pfs-range-min]').text(ui.values[0]);
+        $this.find('[data-pfs-range-max]').text(ui.values[1]);
+    },
+    change: function (event, ui) {
+        var $this = $(this);
+        var options = $this.data('pfs-range');
+
+        store.empty({
+            'slug': 'page',
+            'noUpdate': true
+        });
+
+        if ((ui.values[0] !== options.min) || (ui.values[1] !== options.max)) {
+            options.value = ui.values.join('-');
+            store.change(options);
+        } else {
+            store.empty(options);
         }
-    });
-
-    range.update(this, options);
-    range.change(this, options);
+    }
 });
 
 $('[data-pfs-pagination]').delegate('[data-page]', 'click', function (e) {

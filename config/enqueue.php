@@ -2,20 +2,14 @@
 
 return [
     'styles'   => [
-        'nouislider' => [
-            'src' => '/assets/css/lib/nouislider.min.css',
+        'jquery-ui-slider' => [
+            'src' => '/assets/css/lib/jquery-ui.min.css',
         ],
     ],
     'scripts'  => [
-        'nouislider'  => [
-            'src'       => '/assets/js/lib/nouislider.min.js',
-            'deps'      => null,
-            'ver'       => null,
-            'in-footer' => true
-        ],
         'pfs-scripts' => [
             'src'       => '/assets/js/scripts.js',
-            'deps'      => ['jquery'],
+            'deps'      => ['jquery', 'jquery-ui-slider'],
             'ver'       => null,
             'in-footer' => true
         ]

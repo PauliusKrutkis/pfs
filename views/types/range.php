@@ -1,7 +1,6 @@
 <?php
 /** @var \Pfs\Filter $filter */
 $filter  = $this->get('filter');
-$slug    = $filter->getSlug();
 $options = $filter->getOptions();
 ?>
 
@@ -9,14 +8,17 @@ $options = $filter->getOptions();
 <dd>
     <div data-pfs-range='{
             "slug": "<?php echo $filter->getSlug() ?>",
-            "from": "#<?php echo $filter->getSlug() ?>-from",
-            "to": "#<?php echo $filter->getSlug() ?>-to",
-            "activeFrom": <?php echo $filter->getActiveRangeFrom(true) ?>,
-            "activeTo": <?php echo $filter->getActiveRangeTo(true) ?>,
+            "activeMin": <?php echo $filter->getActiveRangeFrom(true) ?>,
+            "activeMax": <?php echo $filter->getActiveRangeTo(true) ?>,
             "min": <?php echo $options[0]->getValue() ?>,
             "max": <?php echo $options[1]->getValue() ?>,
             "order": <?php echo $filter->getOrder() ?>
-        }'></div>
-    <span id="<?php echo $filter->getSlug() ?>-from"></span>
-    <span id="<?php echo $filter->getSlug() ?>-to"></span>
+        }'>
+        <div class="ui-slider-handle">
+            <div data-pfs-range-min class="min-handle"></div>
+        </div>
+        <div class="ui-slider-handle">
+            <div data-pfs-range-max class="max-handle"></div>
+        </div>
+    </div>
 </dd>
