@@ -242,6 +242,8 @@ $('[data-pfs-range]').slider({
 
         $this.find('[data-pfs-range-min]').text($(this).slider("values")[0]);
         $this.find('[data-pfs-range-max]').text($(this).slider("values")[1]);
+
+        $this.attr('data-init', 1);
     },
     slide: function (event, ui) {
         var $this = $(this);
@@ -252,6 +254,10 @@ $('[data-pfs-range]').slider({
     change: function (event, ui) {
         var $this = $(this);
         var options = $this.data('pfs-range');
+
+        if (!$this.attr('data-init')) {
+            return;
+        }
 
         store.empty({
             'slug': 'page',
