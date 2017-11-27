@@ -10,6 +10,63 @@ var Filter = function (data) {
     this.values = [];
 };
 
+// UI
+
+var ui = (function () {
+    function init() {
+        initSlider();
+    }
+
+    function initSlider() {
+        $('[data-pfs-range]').slider({
+            range: true,
+            create: function () {
+                var $this = $(this);
+                var options = $this.data('pfs-range');
+
+                $this.slider('option', 'min', options.min);
+                $this.slider('option', 'max', options.max);
+                $this.slider('option', 'values', [options.activeMin, options.activeMax]);
+
+                $this.find('[data-pfs-range-min]').text($(this).slider("values")[0]);
+                $this.find('[data-pfs-range-max]').text($(this).slider("values")[1]);
+
+                $this.attr('data-init', 1);
+            },
+            slide: function (event, ui) {
+                var $this = $(this);
+
+                $this.find('[data-pfs-range-min]').text(ui.values[0]);
+                $this.find('[data-pfs-range-max]').text(ui.values[1]);
+            },
+            change: function (event, ui) {
+                var $this = $(this);
+                var options = $this.data('pfs-range');
+
+                if (!$this.attr('data-init')) {
+                    return;
+                }
+
+                store.empty({
+                    'slug': 'page',
+                    'noUpdate': true
+                });
+
+                if ((ui.values[0] !== options.min) || (ui.values[1] !== options.max)) {
+                    options.value = ui.values.join('-');
+                    store.change(options);
+                } else {
+                    store.empty(options);
+                }
+            }
+        });
+    }
+
+    return {
+        init: init
+    }
+})();
+
 // Store
 
 var store = (function () {
@@ -99,11 +156,16 @@ var store = (function () {
         return filters;
     }
 
+    function setData(data) {
+        filters = data;
+    }
+
     return {
         add: add,
         change: change,
         remove: remove,
         empty: empty,
+        setData: setData,
         navigation: $navigation
     }
 
@@ -142,6 +204,11 @@ var events = (function () {
 // Url
 
 var url = (function () {
+    if (store.navigation.length) {
+        var settings = store.navigation.data('pfs-navigation');
+        var page = settings.permalink;
+        var ajax = settings.ajax;
+    }
 
     function generate(data) {
         var url = '';
@@ -163,19 +230,16 @@ var url = (function () {
     }
 
     function update(data) {
-        var settings = store.navigation.data('pfs-navigation');
-        var page = settings.permalink;
-        var ajax = settings.ajax;
         var url = page + generate(data);
 
         if (ajax) {
-            updateContent(url, settings, data);
+            updateContent(url, data);
         } else {
             window.location.href = url;
         }
     }
 
-    function updateContent(url, settings, data) {
+    function updateContent(url, data) {
 
         var query = {
             action: 'getNavigation',
@@ -193,7 +257,12 @@ var url = (function () {
                     }
                 }
 
-                window.history.pushState(null, "", url);
+                if (url) {
+                    window.history.pushState(data, "", url);
+                }
+
+                ui.init();
+
                 events.dispatch(store.navigation[0], 'update_done');
             });
     }
@@ -206,15 +275,21 @@ var url = (function () {
         return data;
     }
 
+    function state(event) {
+        store.setData(event.state);
+        updateContent(null, event.state);
+    }
+
     return {
-        update: update
+        update: update,
+        state: state
     }
 
 })();
 
 // Bind events
 
-$('[data-pfs-checkbox]').click(function () {
+store.navigation.delegate('[data-pfs-checkbox]', 'click', function () {
     var data = $(this).data('pfs-checkbox');
 
     store.empty({
@@ -228,49 +303,6 @@ $('[data-pfs-checkbox]').click(function () {
         store.remove(data);
     }
 
-});
-
-$('[data-pfs-range]').slider({
-    range: true,
-    create: function () {
-        var $this = $(this);
-        var options = $this.data('pfs-range');
-
-        $this.slider('option', 'min', options.min);
-        $this.slider('option', 'max', options.max);
-        $this.slider('option', 'values', [options.activeMin, options.activeMax]);
-
-        $this.find('[data-pfs-range-min]').text($(this).slider("values")[0]);
-        $this.find('[data-pfs-range-max]').text($(this).slider("values")[1]);
-
-        $this.attr('data-init', 1);
-    },
-    slide: function (event, ui) {
-        var $this = $(this);
-
-        $this.find('[data-pfs-range-min]').text(ui.values[0]);
-        $this.find('[data-pfs-range-max]').text(ui.values[1]);
-    },
-    change: function (event, ui) {
-        var $this = $(this);
-        var options = $this.data('pfs-range');
-
-        if (!$this.attr('data-init')) {
-            return;
-        }
-
-        store.empty({
-            'slug': 'page',
-            'noUpdate': true
-        });
-
-        if ((ui.values[0] !== options.min) || (ui.values[1] !== options.max)) {
-            options.value = ui.values.join('-');
-            store.change(options);
-        } else {
-            store.empty(options);
-        }
-    }
 });
 
 $('[data-pfs-pagination]').delegate('[data-page]', 'click', function (e) {
@@ -289,3 +321,10 @@ $('[data-pfs-pagination]').delegate('[data-page]', 'click', function (e) {
         });
     }
 });
+
+// Init
+
+if (store.navigation.length) {
+    window.onpopstate = url.state;
+    ui.init();
+}

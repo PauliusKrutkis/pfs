@@ -213,6 +213,7 @@ class Setup
         }
 
         $response = [
+            '[data-pfs-navigation]' => $navigation->getHtml('navigation'),
             '[data-pfs-posts]'      => $navigation->getHtml('posts'),
             '[data-pfs-pagination]' => $navigation->getHtml('pagination')
         ];
