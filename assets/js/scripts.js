@@ -131,6 +131,10 @@ var store = (function () {
     }
 
     function find(slug) {
+        if (!filters) {
+            return false;
+        }
+
         return filters.find(function (filter) {
             return filter.slug === slug;
         });
@@ -276,7 +280,12 @@ var url = (function () {
     }
 
     function state(event) {
-        store.setData(event.state);
+        if (event.state) {
+            store.setData(event.state);
+        } else {
+            store.setData([]);
+        }
+
         updateContent(null, event.state);
     }
 
