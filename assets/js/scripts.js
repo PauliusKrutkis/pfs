@@ -32,6 +32,7 @@ var ui = (function () {
                 $this.find('[data-pfs-range-max]').text($(this).slider("values")[1]);
 
                 $this.attr('data-init', 1);
+                $this.attr('data-start', $(this).slider("values"));
             },
             slide: function (event, ui) {
                 var $this = $(this);
@@ -44,6 +45,10 @@ var ui = (function () {
                 var options = $this.data('pfs-range');
 
                 if (!$this.attr('data-init')) {
+                    return;
+                }
+
+                if ($this.attr('data-start') === ui.values.toString()) {
                     return;
                 }
 
