@@ -21,4 +21,9 @@ class Helper
 
         return $text;
     }
+
+    public static function getPluginDir()
+    {
+        return '/wp-content/plugins/pfs';
+    }
 }

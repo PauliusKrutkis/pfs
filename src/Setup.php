@@ -11,14 +11,17 @@ class Setup
     private $localize;
     private $directory;
 
-    public function __construct($directory)
-    {
-        Config::load($directory);
+    const PAGE_BODY_CLASS = 'pfs-page-view';
 
-        $this->directory = str_replace(ABSPATH, '/', $directory);
-        $this->styles    = Config::get('enqueue')['styles'];
-        $this->scripts   = Config::get('enqueue')['scripts'];
-        $this->localize  = Config::get('enqueue')['localize'];
+    public function __construct()
+    {
+        $this->directory = Helper::getPluginDir();
+
+        Config::load(ABSPATH . $this->directory);
+
+        $this->styles   = Config::get('enqueue')['styles'];
+        $this->scripts  = Config::get('enqueue')['scripts'];
+        $this->localize = Config::get('enqueue')['localize'];
 
         $this->addActions();
     }
@@ -174,7 +177,7 @@ class Setup
         $instances = $this->getNavigations();
 
         if ( ! $instances) {
-            throw new \Exception("An error ocured while loading Layered_Navigation instance");
+            throw new \Exception("An error ocured while loading Pfs/Navigation instance");
         }
 
         /** @var Navigation $navigation */
@@ -224,6 +227,24 @@ class Setup
         die();
     }
 
+    public function addBodyClass($classes)
+    {
+        $instances = $this->getNavigations();
+
+        if ( ! $instances) {
+            return $classes;
+        }
+
+        /** @var Navigation $navigation */
+        foreach ($instances as $navigation) {
+            if (is_page($navigation->getPageId())) {
+                $classes[] = self::PAGE_BODY_CLASS;
+            }
+        }
+
+        return $classes;
+    }
+
     private function addActions()
     {
         add_action('wp_enqueue_scripts', [$this, 'addAssets']);
@@ -232,5 +253,6 @@ class Setup
         add_filter('navigation_instance', [$this, 'loadNavigationInstance']);
         add_action('wp_ajax_getNavigation', [$this, 'getNavigation']);
         add_action('wp_ajax_nopriv_getNavigation', [$this, 'getNavigation']);
+        add_filter('body_class', [$this, 'addBodyClass']);
     }
 }

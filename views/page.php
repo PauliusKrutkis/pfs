@@ -4,7 +4,7 @@ $navigation = apply_filters('navigation_instance', null);
 get_header();
 ?>
 
-    <div class="pfs-page container">
+    <div class="pfs-page">
 
         <div class="pfs-page__navigation" data-pfs-navigation='{
             "permalink": "<?php echo get_permalink() ?>",
@@ -19,7 +19,7 @@ get_header();
             <?php $navigation->output('posts') ?>
         </div>
 
-        <div class="pfs_page__pagination" data-pfs-pagination>
+        <div class="pfs-page__pagination" data-pfs-pagination>
             <?php $navigation->output('pagination') ?>
         </div>
 
