@@ -140,9 +140,11 @@ var store = (function () {
             return false;
         }
 
-        return filters.find(function (filter) {
+        var result = $.grep(filters, function (filter) {
             return filter.slug === slug;
         });
+
+        return result[0];
     }
 
     function getFilters() {
